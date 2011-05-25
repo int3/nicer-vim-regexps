@@ -225,11 +225,14 @@ syn match	vimEnvvar	"\${\I\i*}"
 "  vimEscapeBrace handles ["]  []"] (ie. "s don't terminate string inside [])
 syn region	vimEscapeBrace	oneline   contained transparent start="[^\\]\(\\\\\)*\[\zs\^\=\]\=" skip="\\\\\|\\\]" end="]"me=e-1
 syn match	vimPatSepErr	contained	"\\)"
-syn match	vimPatSep	contained	"\\|"
+syn match	vimPatSep	contained	"\\|" conceal cchar=|
+syn match	vimPatOneOrMore   contained	"\\+" conceal cchar=+
 syn region	vimPatSepZone	oneline   contained   matchgroup=vimPatSepZ start="\\%\=\ze(" skip="\\\\" end="\\)\|[^\]['"]"	contains=@vimStringGroup
-syn region	vimPatRegion	contained transparent matchgroup=vimPatSepR start="\\[z%]\=(" end="\\)"	contains=@vimSubstList oneline
+syn region	vimPatRegion	contained transparent matchgroup=vimPatSepR start="\\\ze[z%]\=(" end="\\)\@="	contains=@vimSubstList oneline concealends nextgroup=vimPatRegionClose
+syn match         vimPatRegionOpen  contained containedin=vimPatRegion "\([^\z%]\)\@<![z%]\=("
+syn match         vimPatRegionClose contained containedin=vimPatRegion ")"
 syn match	vimNotPatSep	contained	"\\\\"
-syn cluster	vimStringGroup	contains=vimEscapeBrace,vimPatSep,vimNotPatSep,vimPatSepErr,vimPatSepZone,@Spell
+syn cluster	vimStringGroup	contains=vimEscapeBrace,vimPatSep,vimNotPatSep,vimPatSepErr,vimPatSepZone,@Spell,vimPatOneOrMore
 syn region	vimString	oneline keepend	start=+[^:a-zA-Z>!\\@]"+lc=1 skip=+\\\\\|\\"+ end=+"+	contains=@vimStringGroup
 syn region	vimString	oneline keepend	start=+[^:a-zA-Z>!\\@]'+lc=1 end=+'+
 syn region	vimString	oneline	start=+=!+lc=1	skip=+\\\\\|\\!+ end=+!+	contains=@vimStringGroup
@@ -240,7 +243,7 @@ syn match	vimStringCont	contained	+\(\\\\\|.\)\{-}[^\\]"+
 
 " Substitutions: {{{2
 " =============
-syn cluster	vimSubstList	contains=vimPatSep,vimPatRegion,vimPatSepErr,vimSubstTwoBS,vimSubstRange,vimNotation
+syn cluster	vimSubstList	contains=vimPatSep,vimPatRegion,vimPatSepErr,vimSubstTwoBS,vimSubstRange,vimNotation,vimPatOneOrMore
 syn cluster	vimSubstRepList	contains=vimSubstSubstr,vimSubstTwoBS,vimNotation
 syn cluster	vimSubstList	add=vimCollection
 syn match	vimSubst	"\(:\+\s*\|^\s*\||\s*\)\<s\%[ubstitute][:[:alpha:]]\@!" nextgroup=vimSubstPat
@@ -378,8 +381,8 @@ syn match	vimNormCmds contained	".*$"
 
 " Syntax {{{2
 "=======
-syn match	vimGroupList	contained	"@\=[^ \t,]*"	contains=vimGroupSpecial,vimPatSep
-syn match	vimGroupList	contained	"@\=[^ \t,]*,"	nextgroup=vimGroupList contains=vimGroupSpecial,vimPatSep
+syn match	vimGroupList	contained	"@\=[^ \t,]*"	contains=vimGroupSpecial,vimPatSep,vimPatOneOrMore
+syn match	vimGroupList	contained	"@\=[^ \t,]*,"	nextgroup=vimGroupList contains=vimGroupSpecial,vimPatSep,vimPatOneOrMore
 syn keyword	vimGroupSpecial	contained	ALL	ALLBUT	CONTAINED	TOP
 if !exists("g:vimsyn_noerror")
  syn match	vimSynError	contained	"\i\+"
@@ -431,7 +434,7 @@ endif
 syn keyword	vimSynType	contained	enable	list	manual	off	on	reset
 
 " Syntax: region {{{2
-syn cluster	vimSynRegPatGroup	contains=vimPatSep,vimNotPatSep,vimSynPatRange,vimSynNotPatRange,vimSubstSubstr,vimPatRegion,vimPatSepErr,vimNotation
+syn cluster	vimSynRegPatGroup	contains=vimPatSep,vimNotPatSep,vimSynPatRange,vimSynNotPatRange,vimSubstSubstr,vimPatRegion,vimPatSepErr,vimNotation,vimPatOneOrMore
 syn cluster	vimSynRegGroup	contains=vimSynContains,vimSynNextgroup,vimSynRegOpt,vimSynReg,vimSynMtchGrp
 syn keyword	vimSynType	contained	region	skipwhite nextgroup=vimSynRegion
 syn region	vimSynRegion	contained keepend	matchgroup=vimGroupName start="\k\+" skip="\\\\\|\\|" end="|\|$" contains=@vimSynRegGroup
@@ -866,6 +869,12 @@ hi def link vimUserAttrbCmpltFunc	Special
 hi def link vimUserCmdError	Error
 hi def link vimUserFunc	Normal
 hi def link vimWarn	WarningMsg
+
+hi! def link Conceal               vimKeyword
+hi def link vimPatRegionOpen       vimKeyword
+hi def link vimPatRegionClose      vimKeyword
+set conceallevel=2
+set concealcursor=nv
 
 " Current Syntax Variable: {{{2
 let b:current_syntax = "vim"
