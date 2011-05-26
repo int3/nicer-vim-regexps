@@ -872,9 +872,9 @@ hi def link vimUserCmdError	Error
 hi def link vimUserFunc	Normal
 hi def link vimWarn	WarningMsg
 
-hi! def link Conceal               vimKeyword
-hi def link vimPatRegionOpen       vimKeyword
-hi def link vimPatRegionClose      vimKeyword
+hi! def link Conceal               Special
+hi def link vimPatRegionOpen       Special
+hi def link vimPatRegionClose      Special
 set conceallevel=2
 set concealcursor=nv
 
